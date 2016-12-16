@@ -3,13 +3,15 @@ package higo
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	`log`
 	"net/http"
 )
 
 type higo struct {
 	Routes []IRoute
 }
+
+var DefaultServer = NewHigo()
 
 func NewHigo() *higo {
 	z := &higo{}
@@ -22,28 +24,27 @@ func (h *higo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("%s\n", s)
 
-	req := &Context{}
-	req.Req.Request = r
-	req.Resp.ResponseWriter = w
-	req.Init()
+	ctx := &Context{
+	}
+	ctx.Init(w, r)
 
-	path := r.URL.Path
+	defer func() {
+		ctx.CatchException()
+	}()
 
 	found := false
 	for _, v := range h.Routes {
-		if v.Match(path) {
+		if v.Match(ctx.FullUrl()) {
 			found = true
-			v.Go(req)
+			v.Go(ctx)
 			break
 		}
 	}
 
 	if !found {
-		req.Raw(`404`)
+		ctx.ThrowHttp(404)
 	}
 }
-
-
 
 func (h *higo) Run(addr string) {
 	http.ListenAndServe(addr, h)
