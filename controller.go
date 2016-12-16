@@ -1,4 +1,4 @@
-package zfgo
+package higo
 
 type IController interface {
 }

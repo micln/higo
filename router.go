@@ -1,4 +1,4 @@
-package zfgo
+package higo
 
 import (
 	"fmt"
@@ -36,9 +36,9 @@ type Route struct {
 	Method   []string
 }
 
-func (this *Route) Match(path string) bool {
+func (route *Route) Match(path string) bool {
 	//path = strings.TrimRight(path, "/")
-	return path == this.Pattern
+	return path == route.Pattern
 }
 
 type AutoRoute struct {
@@ -50,8 +50,8 @@ func (this *AutoRoute) Match(path string) bool {
 	return false
 }
 
-func (this *Route) Go(ctx *Context, args ...string) {
-	for _, handler := range this.Handlers {
+func (route *Route) Go(ctx *Context, args ...string) {
+	for _, handler := range route.Handlers {
 		handler(ctx)
 	}
 }
@@ -61,16 +61,16 @@ func (this *AutoRoute) Go(ctx *Context, args ...string) {
 	fmt.Println(httpMethod)
 }
 
-func (this *zfgo) addRoute(path string, methods []string, handlers []Handler) {
+func (h *higo) addRoute(path string, methods []string, handlers []Handler) {
 	route := &Route{
 		Method:   methods,
 		Handlers: handlers,
 	}
 	route.Pattern = path
-	this.Routes = append(this.Routes, route)
+	h.Routes = append(h.Routes, route)
 }
 
-func (this *zfgo) addRouter(path string, c IController) {
+func (h *higo) addRouter(path string, c IController) {
 	typ := reflect.TypeOf(c)
 
 	auto := &AutoRoute{}
@@ -79,25 +79,28 @@ func (this *zfgo) addRouter(path string, c IController) {
 		method := typ.Method(i)
 		for _, m := range Methods {
 			if strings.Index(method.Name, m) == 0 {
-
 				auto.Funcs[method.Name] = method.Func
 			}
 		}
 	}
 
-	this.Routes = append(this.Routes, auto)
+	h.Routes = append(h.Routes, auto)
 }
 
 /*********	Public Functions	************/
 
-func (this *zfgo) Get(pattern string, handlers ...Handler) {
-	this.addRoute(pattern, []string{http.MethodGet}, handlers)
+func (h *higo) Get(pattern string, handlers ...Handler) {
+	h.addRoute(pattern, []string{http.MethodGet}, handlers)
 }
 
-func (this *zfgo) Any(pattern string, handlers ...Handler) {
-	this.addRoute(pattern, Methods, handlers)
+func (h *higo) Post(pattern string, handlers ...Handler) {
+	h.addRoute(pattern, []string{http.MethodPost}, handlers)
 }
 
-func (this *zfgo) Router(pattern string, controller IController) {
-	this.addRouter(pattern, controller)
+func (h *higo) Any(pattern string, handlers ...Handler) {
+	h.addRoute(pattern, Methods, handlers)
+}
+
+func (h *higo) Router(pattern string, controller IController) {
+	h.addRouter(pattern, controller)
 }

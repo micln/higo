@@ -1,23 +1,22 @@
-package zfgo
+package higo
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/chanxuehong/wechat/json"
 )
 
-type zfgo struct {
+type higo struct {
 	Routes []IRoute
 }
 
-func New() *zfgo {
-	z := &zfgo{}
+func NewHigo() *higo {
+	z := &higo{}
 	return z
 }
 
-func (this *zfgo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *higo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 	s, _ := json.Marshal(r.URL)
 
@@ -31,7 +30,7 @@ func (this *zfgo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 
 	found := false
-	for _, v := range this.Routes {
+	for _, v := range h.Routes {
 		if v.Match(path) {
 			found = true
 			v.Go(req)
@@ -44,6 +43,8 @@ func (this *zfgo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (this *zfgo) Run(addr string) {
-	http.ListenAndServe(addr, this)
+
+
+func (h *higo) Run(addr string) {
+	http.ListenAndServe(addr, h)
 }
