@@ -1,12 +1,15 @@
-package higo
+package controller
 
-import "github.com/micln/higo/exception"
+import (
+	"github.com/micln/higo/context"
+	"github.com/micln/higo/exception"
+)
 
 type IController interface {
 }
 
 type Controller struct {
-	Ctx *Context
+	Ctx         *context.Context
 }
 
 func (c *Controller) Return() {

@@ -1,4 +1,4 @@
-package higo
+package context
 
 import (
 	"encoding/json"
@@ -15,8 +15,16 @@ type Resp struct {
 	http.ResponseWriter
 }
 
-func (resp *Resp) SetType(typ string) {
+func (resp *Resp) SetContentType(typ string) {
 	resp.Header().Set(`Content-Type`, typ)
+}
+
+func (resp *Resp) SetStatusCode(code string) {
+	resp.Header().Set(`Status Code`, code)
+}
+
+func (resp *Resp) GetStatusCode() string {
+	return resp.Header().Get(`Status Code`)
 }
 
 func (resp *Resp) WriteString(s string) {
@@ -25,7 +33,7 @@ func (resp *Resp) WriteString(s string) {
 
 //	@todo 用XSS过滤
 func (resp *Resp) Raw(raw string) {
-	resp.SetType(`text/plain`)
+	resp.SetContentType(`text/plain`)
 	resp.WriteString(raw)
 }
 
@@ -63,6 +71,9 @@ func (resp *Resp) ThrowException(e exception.IException) {
 }
 
 func (resp *Resp) Throw(code int, message string) {
+
+	resp.SetStatusCode(fmt.Sprintf(`%d`, code))
+
 	resp.ThrowException(&exception.DefaultException{
 		Code:    code,
 		Message: message,
@@ -70,10 +81,10 @@ func (resp *Resp) Throw(code int, message string) {
 }
 
 var httpCodeMessage = map[int]string{
-	404:`Not Found`,
+	404: `Not Found`,
 }
 
-func (resp *Resp) ThrowHttp(code int) {
+func (resp *Resp) ThrowHttpCode(code int) {
 	msg := httpCodeMessage[code]
 	if len(msg) < 0 {
 		resp.Throw(500, fmt.Sprintf("Unknow http code [%s]", code))
@@ -87,10 +98,8 @@ func (resp *Resp) AssertNil(err error) {
 	}
 }
 
-func (resp *Resp) CatchException() {
-	if r := recover(); r != nil {
-		resp.ResponseException(r)
-	}
+func (resp *Resp) CatchException(recv interface{}) {
+	resp.ResponseException(recv)
 }
 
 func (resp *Resp) ResponseException(r interface{}) {
